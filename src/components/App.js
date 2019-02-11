@@ -6,42 +6,50 @@ import Titles from "./Titles";
 import Form from "./Form";
 import Weather from "./Weather";
 
-const API_KEY = process.env.REACT_APP_WEATHER_API;
-
 class App extends Component {
 	state = {
-		temperature: undefined,
-		city: undefined,
-		country: undefined,
-		humidity: undefined,
-		description: undefined,
-		error: undefined
+		weather: {
+			temperature: undefined,
+			city: undefined,
+			country: undefined,
+			humidity: undefined,
+			description: undefined,
+			error: undefined
+		}
 	};
-	getWeather = async (event) => {
-		event.preventDefault();
-		const inputElements = event.target.elements;
-		const city = inputElements.city.value;
-		const country = inputElements.country.value;
-		const api_call = await fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city},${country}
-    &APPID=${API_KEY}&units=imperial
-    `);
-		const data = await api_call.json();
+	setWeatherState = (data, format) => {
+		let weatherObj = {};
+
+		if (format === "forecast") {
+			weatherObj = {
+				temperature: Math.floor(data.list[0].main.temp),
+				city: data.city.name,
+				country: data.city.country,
+				humidity: data.list[0].main.humidity,
+				description: data.list[0].weather[0].description,
+				error: undefined
+			};
+		} else if (format === "weather") {
+			weatherObj = {
+				temperature: Math.floor(data.main.temp),
+				city: data.name,
+				country: data.sys.country,
+				humidity: data.main.humidity,
+				description: data.weather[0].description,
+				error: undefined
+			};
+		}
 
 		this.setState({
-			temperature: Math.floor(data.main.temp),
-			city: data.name,
-			country: data.sys.country,
-			humidity: data.main.humidity,
-			description: data.weather[0].description,
-			error: undefined
+			weather: weatherObj
 		});
 	};
 	render() {
 		return (
-			<div>
+			<div className="app">
 				<Titles />
-				<Form getWeather={this.getWeather} />
-				<Weather
+				<Form setState={this.setWeatherState} />
+				<Weather weather={this.state.weather}
 					temperature={this.state.temperature}
 					city={this.state.city}
 					country={this.state.country}
