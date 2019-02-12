@@ -1,40 +1,40 @@
 import React, { Component } from "react";
 
-const API_KEY = process.env.REACT_APP_WEATHER_API;
+import { getWeather } from "./../api/openweathermap";
 
 class Form extends Component {
-	getWeather = async (event) => {
+	formSubmit = (event) => {
 		event.preventDefault();
-
-		const apiURL = `http://api.openweathermap.org/data/2.5/`;
 		const inputElements = event.target.elements;
-		const city = inputElements.city.value;
-		const country = inputElements.country.value;
 		const apiCallType = inputElements.type.value || "weather";
-		const apiCall = await fetch(`${apiURL}${apiCallType}?q=${city},${country}&APPID=${API_KEY}&units=imperial`);
-		const data = await apiCall.json();
 
-		if (data) {
-			this.props.setState(data, apiCallType);
-		}
+		getWeather(inputElements)
+			.then((result) => {
+				if (result) {
+					this.props.setParentState(result, apiCallType);
+				}
+			})
+			.catch((error) => console.error(error));
 	};
-
 	render() {
 		return (
 			<div>
-				<form onSubmit={this.getWeather}>
+				<form onSubmit={this.formSubmit}>
 					<div>
 						<input id="city" type="text" name="city" placeholder="city..." />
 						<br />
-						<input id="country" type="text" name="country" placeholder="country..." />
+						or
+						<br />
+						<input id="zip" type="text" name="zip" placeholder="zip..." />
+						<br />
+						<input id="country" type="text" name="country" placeholder="(optional) country" />
 					</div>
 					<select id="type" name="type">
-						<option>Select One</option>
 						<option value="forecast">Forecast</option>
 						<option value="weather">Weather</option>
 					</select>
 					<br />
-					<button>Get Weather </button>
+					<button type="submit">Get Weather</button>
 				</form>
 			</div>
 		);
