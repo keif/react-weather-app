@@ -3,7 +3,6 @@ import "./weather.css";
 
 class Weather extends Component {
 	render() {
-		console.log("Weather: ", this.props);
 		return (
 			<div className="weather">
 				{/* this will only display once this.prop.city etc is true */}

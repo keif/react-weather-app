@@ -4,49 +4,65 @@ import Titles from "./Titles";
 import Form from "./Form";
 import Weather from "./Weather";
 
-class Home extends Component {
-	state = {
-		weather: {
-			temperature: undefined,
-			city: undefined,
-			country: undefined,
-			humidity: undefined,
-			description: undefined,
+import { getWeatherByLatLong } from "./../api/openweathermap";
+
+const formatWeatherData = (data, format) => {
+	format = format || "weather";
+
+	if (format === "forecast") {
+		return {
+			temperature: Math.floor(data.list[0].main.temp),
+			city: data.city.name,
+			country: data.city.country,
+			humidity: data.list[0].main.humidity,
+			description: data.list[0].weather[0].description,
 			error: undefined
-		}
-	};
+		};
+	} else if (format === "weather") {
+		return {
+			temperature: Math.floor(data.main.temp),
+			city: data.name,
+			country: data.sys.country,
+			humidity: data.main.humidity,
+			description: data.weather[0].description,
+			error: undefined
+		};
+	}
+};
+
+class Home extends Component {
+	constructor(props) {
+		super(props);
+		const module = this;
+
+		this.state = {
+			weather: {}
+		};
+
+		navigator.geolocation.getCurrentPosition(function(location) {
+			const locCoords = location.coords;
+
+			getWeatherByLatLong(locCoords.latitude, locCoords.longitude)
+				.then(data => {
+					if (data) {
+						module.setState({
+						    weather: formatWeatherData(data)
+						});
+					}
+				})
+				.catch((reason) => console.error(reason));
+		});
+	}
 	setWeatherState = (data, format) => {
-		let weatherObj = {};
-
-		if (format === "forecast") {
-			weatherObj = {
-				temperature: Math.floor(data.list[0].main.temp),
-				city: data.city.name,
-				country: data.city.country,
-				humidity: data.list[0].main.humidity,
-				description: data.list[0].weather[0].description,
-				error: undefined
-			};
-		} else if (format === "weather") {
-			weatherObj = {
-				temperature: Math.floor(data.main.temp),
-				city: data.name,
-				country: data.sys.country,
-				humidity: data.main.humidity,
-				description: data.weather[0].description,
-				error: undefined
-			};
-		}
-
 		this.setState({
-			weather: weatherObj
+			weather: formatWeatherData(data, format)
 		});
 	};
 	render() {
 		return (
 			<div className="home">
 				<Titles />
-				<Form setState={this.setWeatherState} />
+				<Form setParentState={this.setWeatherState} />
 				<Weather weather={this.state.weather} />
 			</div>
 		);
